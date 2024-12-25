@@ -9,7 +9,7 @@ export function Footer() {
         <span className="text-lg">
           by{" "}
           <a href="https://x.com/suhas_183" target="_blank">
-            suhas
+            Suhas
           </a>
         </span>
       </div>
