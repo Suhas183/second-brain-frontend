@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/card";
 import { useEffect } from "react";
 import {
-  XEmbed,
   YouTubeEmbed,
   InstagramEmbed,
   PinterestEmbed,
@@ -113,14 +112,6 @@ export function Dashboard() {
                   {card.linkURL && (
                     <CardContent className="flex justify-center items-center flex-grow overflow-hidden">
                       <div className="w-full h-full">
-                        {card.linkURL.includes("x.com") && (
-                          <XEmbed
-                            url={card.linkURL}
-                            width="100%"
-                            height="100%"
-                            key={card.linkURL}
-                          />
-                        )}
                         {(card.linkURL.includes("youtube.com") ||
                           card.linkURL.includes("youtu.be")) && (
                           <YouTubeEmbed
@@ -147,7 +138,6 @@ export function Dashboard() {
                           />
                         )}
                         {!(
-                          card.linkURL.includes("x.com") ||
                           card.linkURL.includes("youtube.com") ||
                           card.linkURL.includes("youtu.be") ||
                           card.linkURL.includes("instagram.com") ||
