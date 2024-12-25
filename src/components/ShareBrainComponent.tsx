@@ -22,6 +22,7 @@ import { Header } from "./Header";
 import bocchi_sad from "../assets/bocchi_sad.png";
 import NotFoundPage from "./NotFound_404";
 import { useToast } from "@/hooks/use-toast";
+import { Footer } from "./Footer";
 
 function getDomainFromUrl(url: string) {
   try {
@@ -64,100 +65,103 @@ export function ShareBrain() {
   }
 
   return (
-    <div className="px-24 pt-6">
+    <div className="px-24 pt-6 flex flex-col">
       <Header />
-      {cards.length === 0 ? (
-        <div className="flex flex-col items-center justify-center mt-20">
-          <h2 className="text-2xl font-semibold text-gray-500">
-            No cards added yet!
-          </h2>
-          <img className="h-48 w-48" src={bocchi_sad} alt="logo" />
-        </div>
-      ) : (
-        <ResponsiveMasonry
-          className="mt-6"
-          columnsCountBreakPoints={{ 350: 1, 750: 2, 1024: 3 }}
-        >
-          <Masonry gutter="24px">
-            {cards.map((card) => (
-              <Card
-                key={card._id}
-                className="w-full min-h-[250px] flex flex-col justify-between group relative shadow-md"
-                style={{ breakInside: "avoid" }} // Ensure cards don't break between columns
-              >
-                <CardHeader>
-                  <CardTitle>
-                    <div className="flex justify-between items-center">
-                      <div className="truncate">{card.title}</div>
-                    </div>
-                  </CardTitle>
-                  {card.noteContent && (
-                    <CardDescription className="mt-2 text-sm text-gray-600 overflow-y-scroll max-h-[160px] scrollbar-thin">
-                      {card.noteContent}
-                    </CardDescription>
+      <div className="flex-grow">
+        {cards.length === 0 ? (
+          <div className="flex flex-col items-center justify-center mt-20">
+            <h2 className="text-2xl font-semibold text-gray-500">
+              No cards added yet!
+            </h2>
+            <img className="h-48 w-48" src={bocchi_sad} alt="logo" />
+          </div>
+        ) : (
+          <ResponsiveMasonry
+            className="mt-6"
+            columnsCountBreakPoints={{ 350: 1, 750: 2, 1024: 3 }}
+          >
+            <Masonry gutter="24px">
+              {cards.map((card) => (
+                <Card
+                  key={card._id}
+                  className="w-full min-h-[250px] flex flex-col justify-between group relative shadow-md"
+                  style={{ breakInside: "avoid" }} // Ensure cards don't break between columns
+                >
+                  <CardHeader>
+                    <CardTitle>
+                      <div className="flex justify-between items-center">
+                        <div className="truncate">{card.title}</div>
+                      </div>
+                    </CardTitle>
+                    {card.noteContent && (
+                      <CardDescription className="mt-2 text-sm text-gray-600 overflow-y-scroll max-h-[160px] scrollbar-thin">
+                        {card.noteContent}
+                      </CardDescription>
+                    )}
+                  </CardHeader>
+                  {card.linkURL && (
+                    <CardContent className="flex justify-center items-center flex-grow overflow-hidden">
+                      <div className="w-full h-full">
+                        {card.linkURL.includes("x.com") && (
+                          <XEmbed
+                            url={card.linkURL}
+                            width="100%"
+                            height="100%"
+                            key={card.linkURL}
+                          />
+                        )}
+                        {(card.linkURL.includes("youtube.com") ||
+                          card.linkURL.includes("youtu.be")) && (
+                          <YouTubeEmbed
+                            url={card.linkURL}
+                            width="100%"
+                            height="100%"
+                            key={card.linkURL}
+                          />
+                        )}
+                        {card.linkURL.includes("instagram.com") && (
+                          <InstagramEmbed
+                            url={card.linkURL}
+                            width="100%"
+                            height="100%"
+                            key={card.linkURL}
+                          />
+                        )}
+                        {card.linkURL.includes("pinterest") && (
+                          <PinterestEmbed
+                            url={card.linkURL}
+                            width="100%"
+                            height="100%"
+                            key={card.linkURL}
+                          />
+                        )}
+                        {!(
+                          card.linkURL.includes("x.com") ||
+                          card.linkURL.includes("youtube.com") ||
+                          card.linkURL.includes("youtu.be") ||
+                          card.linkURL.includes("instagram.com") ||
+                          card.linkURL.includes("pinterest")
+                        ) && (
+                          <PlaceholderEmbed
+                            url={card.linkURL}
+                            linkText={`View post on ${getDomainFromUrl(
+                              card.linkURL
+                            )}`}
+                            style={{ height: "150px" }}
+                            key={card.linkURL}
+                            spinnerDisabled={true}
+                          />
+                        )}
+                      </div>
+                    </CardContent>
                   )}
-                </CardHeader>
-                {card.linkURL && (
-                  <CardContent className="flex justify-center items-center flex-grow overflow-hidden">
-                    <div className="w-full h-full">
-                      {card.linkURL.includes("x.com") && (
-                        <XEmbed
-                          url={card.linkURL}
-                          width="100%"
-                          height="100%"
-                          key={card.linkURL}
-                        />
-                      )}
-                      {(card.linkURL.includes("youtube.com") ||
-                        card.linkURL.includes("youtu.be")) && (
-                        <YouTubeEmbed
-                          url={card.linkURL}
-                          width="100%"
-                          height="100%"
-                          key={card.linkURL}
-                        />
-                      )}
-                      {card.linkURL.includes("instagram.com") && (
-                        <InstagramEmbed
-                          url={card.linkURL}
-                          width="100%"
-                          height="100%"
-                          key={card.linkURL}
-                        />
-                      )}
-                      {card.linkURL.includes("pinterest") && (
-                        <PinterestEmbed
-                          url={card.linkURL}
-                          width="100%"
-                          height="100%"
-                          key={card.linkURL}
-                        />
-                      )}
-                      {!(
-                        card.linkURL.includes("x.com") ||
-                        card.linkURL.includes("youtube.com") ||
-                        card.linkURL.includes("youtu.be") ||
-                        card.linkURL.includes("instagram.com") ||
-                        card.linkURL.includes("pinterest")
-                      ) && (
-                        <PlaceholderEmbed
-                          url={card.linkURL}
-                          linkText={`View post on ${getDomainFromUrl(
-                            card.linkURL
-                          )}`}
-                          style={{ height: "150px" }}
-                          key={card.linkURL}
-                          spinnerDisabled={true}
-                        />
-                      )}
-                    </div>
-                  </CardContent>
-                )}
-              </Card>
-            ))}
-          </Masonry>
-        </ResponsiveMasonry>
-      )}
+                </Card>
+              ))}
+            </Masonry>
+          </ResponsiveMasonry>
+        )}
+      </div>
+      <Footer />
     </div>
   );
 }
