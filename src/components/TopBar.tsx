@@ -1,11 +1,11 @@
 import { AddContentButton } from "./AddContent";
-import { ShareBrain } from "./ShareBrain";
+import { ShareBrainButton } from "./ShareBrainButton";
 
 export function TopBar() {
   return (
-    <div className="flex justify-end gap-4">
+    <div className="mt-4 flex justify-end gap-4">
       <AddContentButton />
-      <ShareBrain />
+      <ShareBrainButton />
     </div>
   );
 }

@@ -46,8 +46,3 @@ export const cardsState = atom<Card[]>({
   key: "cards",
   default: [],
 });
-
-export const dialogOpenState = atom<boolean>({
-  key: "dialogOpen",
-  default: false,
-});

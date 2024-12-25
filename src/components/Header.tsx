@@ -1,13 +1,24 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import brainly from "../assets/brainly.png";
+import { useNavigate } from "react-router-dom";
 
 export function Header() {
   const { loginWithRedirect, isAuthenticated, logout, isLoading } = useAuth0();
+  const navigate = useNavigate();
+
+  const handleClick = () => {
+    navigate("/");
+  };
   return (
-    <header className="px-24 pt-12 flex justify-between items-center relative z-10">
-      <div className="flex items-center gap-2">
+    <header className="pt-6 flex justify-between items-center relative z-10">
+      <div
+        onClick={handleClick}
+        className="flex items-center gap-2 cursor-pointer"
+      >
         <img className="h-16 w-16" src={brainly} alt="logo" />
-        <h2 className="text-5xl">Brainly</h2>
+        <h2 className="text-5xl font-bold bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-transparent bg-clip-text">
+          Brainly
+        </h2>
       </div>
       {isLoading || !isAuthenticated ? (
         <button

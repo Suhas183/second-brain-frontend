@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -29,7 +29,6 @@ import {
 import { useRecoilState, useSetRecoilState } from "recoil";
 import {
   cardsState,
-  dialogOpenState,
   imageURLState,
   isPopoverOpenState,
   linkURLState,
@@ -41,6 +40,7 @@ import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 type TypeOption = {
   value: "note" | "link" | "image";
@@ -50,18 +50,18 @@ type TypeOption = {
 const types: TypeOption[] = [
   { value: "note", label: "Note" },
   { value: "link", label: "Link" },
-  { value: "image", label: "Image" },
 ];
 
 export function AddContentButton() {
   const { getAccessTokenSilently } = useAuth0();
+  const { toast } = useToast(); // Hook for showing toast notifications
   const [title, setTitle] = useRecoilState(titleState);
   const [type, setType] = useRecoilState(typeState);
   const [linkURL, setLinkURL] = useRecoilState(linkURLState);
   const [imageURL, setImageURL] = useRecoilState(imageURLState);
   const [noteContent, setNoteContent] = useRecoilState(noteContentState);
   const [isPopoverOpen, setPopoverOpen] = useRecoilState(isPopoverOpenState);
-  const [dialogOpen, setDialogOpen] = useRecoilState(dialogOpenState);
+  const [open, setOpen] = useState(false);
   const setCards = useSetRecoilState(cardsState);
 
   const resetStates = () => {
@@ -71,10 +71,6 @@ export function AddContentButton() {
     setNoteContent("");
     setImageURL("");
   };
-
-  useEffect(() => {
-    if (!dialogOpen) resetStates();
-  }, [dialogOpen]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -106,18 +102,24 @@ export function AddContentButton() {
 
       // Reset state and close dialog
       resetStates();
-      setDialogOpen(false);
-    } catch (err) {
-      console.error("Something went wrong: ", err);
+      setOpen(false);
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to add content. Please try again.",
+        duration: 1000,
+      });
+      setOpen(false);
     }
   };
 
   return (
     <Dialog
-      open={dialogOpen}
+      open={open}
       onOpenChange={(isOpen) => {
         if (!isOpen) resetStates(); // Always reset states when dialog closes
-        setDialogOpen(isOpen);
+        setOpen(isOpen);
       }}
     >
       <DialogTrigger asChild>
@@ -209,20 +211,6 @@ export function AddContentButton() {
                   id="linkURL"
                   value={linkURL}
                   onChange={(e) => setLinkURL(e.target.value)}
-                  placeholder="Enter URL"
-                  className="col-span-3"
-                />
-              </div>
-            )}
-            {type === "image" && (
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="imageURL" className="text-right">
-                  Image URL
-                </Label>
-                <Input
-                  id="imageURL"
-                  value={imageURL}
-                  onChange={(e) => setImageURL(e.target.value)}
                   placeholder="Enter URL"
                   className="col-span-3"
                 />

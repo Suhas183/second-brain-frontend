@@ -6,7 +6,7 @@ import { FlipWords } from "./ui/flip-words";
 export function Hero() {
   const { loginWithRedirect } = useAuth0();
   return (
-    <div className="mt-36 mx-10 md:mx-20 flex flex-col md:flex-row justify-between items-center">
+    <div className="px-4 mt-28 flex flex-col md:flex-row justify-between items-center">
       <div className="text-center md:text-left">
         <h1 className="text-5xl md:text-6xl font-extrabold leading-tight">
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-green-500 block pb-1">

@@ -14,9 +14,11 @@ import { useAuth0 } from "@auth0/auth0-react";
 import axios from "axios";
 import { useSetRecoilState } from "recoil";
 import { cardsState } from "@/atoms";
+import { useToast } from "@/hooks/use-toast";
 
 export function DeleteContentButton({ id }: { id: string }) {
   const { getAccessTokenSilently } = useAuth0();
+  const { toast } = useToast();
   const setCards = useSetRecoilState(cardsState);
   const handleDelete = async () => {
     try {
@@ -30,8 +32,13 @@ export function DeleteContentButton({ id }: { id: string }) {
         }
       );
       setCards((prevCards) => prevCards.filter((card) => card._id !== id));
-    } catch (err) {
-      console.log(err);
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete content. Please try again.",
+        duration: 1000,
+      });
     }
   };
   return (

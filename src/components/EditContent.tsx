@@ -41,6 +41,7 @@ import axios from "axios";
 import { useAuth0 } from "@auth0/auth0-react";
 import { EditIcon } from "./ui/EditIcon";
 import { Card } from "@/atoms";
+import { useToast } from "@/hooks/use-toast";
 
 type TypeOption = {
   value: "note" | "link" | "image"; // Restrict value to specific strings
@@ -56,15 +57,12 @@ const types: TypeOption[] = [
     value: "link",
     label: "Link",
   },
-  {
-    value: "image",
-    label: "Image",
-  },
 ];
 
 export function EditContentButton({ id }: { id: string }) {
   // State for inputs
   const { getAccessTokenSilently } = useAuth0();
+  const { toast } = useToast();
   const [title, setTitle] = useRecoilState(titleState);
   const [type, setType] = useRecoilState(typeState);
   const [linkURL, setLinkURL] = useRecoilState(linkURLState);
@@ -116,8 +114,14 @@ export function EditContentButton({ id }: { id: string }) {
       ]);
       resetStates();
       setOpen(false);
-    } catch (err) {
-      console.error("Something wrong happened:- " + err);
+    } catch {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to edit content. Please try again.",
+        duration: 1000,
+      });
+      setOpen(false);
     }
   };
 
@@ -141,7 +145,6 @@ export function EditContentButton({ id }: { id: string }) {
           break;
       }
     };
-    console.log(id);
     const card = cards.find((card) => card._id === id);
     if (card) setCardDetails(card);
   }, [open]);
@@ -242,20 +245,6 @@ export function EditContentButton({ id }: { id: string }) {
                   id="linkURL"
                   value={linkURL}
                   onChange={(e) => setLinkURL(e.target.value)}
-                  placeholder="Enter URL"
-                  className="col-span-3"
-                />
-              </div>
-            )}
-            {type === "image" && (
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="imageURL" className="text-right">
-                  Image URL
-                </Label>
-                <Input
-                  id="imageURL"
-                  value={imageURL}
-                  onChange={(e) => setImageURL(e.target.value)}
                   placeholder="Enter URL"
                   className="col-span-3"
                 />

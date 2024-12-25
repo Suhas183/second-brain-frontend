@@ -1,5 +1,4 @@
 import { cardsState } from "@/atoms";
-import { TopBar } from "./TopBar";
 import {
   Card,
   CardContent,
@@ -7,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   XEmbed,
   YouTubeEmbed,
@@ -17,14 +16,11 @@ import {
 } from "react-social-media-embed";
 import { useRecoilState } from "recoil";
 import axios from "axios";
-import { useAuth0 } from "@auth0/auth0-react";
-import { EditContentButton } from "./EditContent";
-import { DeleteContentButton } from "./DeleteContent";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
+import { useParams } from "react-router-dom";
 import { Header } from "./Header";
 import bocchi_sad from "../assets/bocchi_sad.png";
-import { Footer } from "./Footer";
-import { Toaster } from "./ui/toaster";
+import NotFoundPage from "./NotFound_404";
 import { useToast } from "@/hooks/use-toast";
 
 function getDomainFromUrl(url: string) {
@@ -36,50 +32,46 @@ function getDomainFromUrl(url: string) {
   }
 }
 
-export function Dashboard() {
-  const [cards, setCards] = useRecoilState(cardsState);
-  const { getAccessTokenSilently } = useAuth0();
+export function ShareBrain() {
+  const { id } = useParams();
   const { toast } = useToast();
+  const [cards, setCards] = useRecoilState(cardsState);
+  const [err, setErr] = useState(false);
 
   useEffect(() => {
     const fetchCards = async () => {
       try {
-        const token = await getAccessTokenSilently();
         const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/content`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          `${import.meta.env.VITE_BACKEND_URL}/api/share/brain/${id}`
         );
         const cardsData = response.data.content;
         setCards(cardsData);
       } catch {
+        setErr(true);
         toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to fetch content. Please Refresh!",
+          description: "Something went wrong!",
           duration: 1000,
         });
       }
     };
     fetchCards();
-  }, [getAccessTokenSilently, setCards]);
+  }, [setCards]);
+
+  if (err) {
+    return <NotFoundPage />;
+  }
 
   return (
     <div className="px-24 pt-6">
       <Header />
-      <TopBar />
       {cards.length === 0 ? (
         <div className="flex flex-col items-center justify-center mt-20">
           <h2 className="text-2xl font-semibold text-gray-500">
             No cards added yet!
           </h2>
           <img className="h-48 w-48" src={bocchi_sad} alt="logo" />
-          <p className="text-gray-400 mt-2">
-            Start by clicking on the <strong>Add Note</strong> button above.
-          </p>
         </div>
       ) : (
         <ResponsiveMasonry
@@ -97,10 +89,6 @@ export function Dashboard() {
                   <CardTitle>
                     <div className="flex justify-between items-center">
                       <div className="truncate">{card.title}</div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        <EditContentButton id={card._id} />
-                        <DeleteContentButton id={card._id} />
-                      </div>
                     </div>
                   </CardTitle>
                   {card.noteContent && (
@@ -170,8 +158,6 @@ export function Dashboard() {
           </Masonry>
         </ResponsiveMasonry>
       )}
-      <Toaster />
-      <Footer />
     </div>
   );
 }
