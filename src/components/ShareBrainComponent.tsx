@@ -64,7 +64,7 @@ export function ShareBrain() {
   }
 
   return (
-    <div className="px-24 pt-6 flex flex-col">
+    <div className="px-24 pt-6 flex flex-col min-h-[95vh]">
       <Header />
       <div className="flex-grow">
         {cards.length === 0 ? (
@@ -144,6 +144,9 @@ export function ShareBrain() {
                         )}
                       </div>
                     </CardContent>
+                  )}
+                  {card.imageURL && (
+                    <img src={card.imageURL} alt="Image" width={"100%"} />
                   )}
                 </Card>
               ))}

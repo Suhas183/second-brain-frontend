@@ -30,7 +30,6 @@ import { Button } from "@/components/ui/button";
 import { useRecoilState } from "recoil";
 import {
   cardsState,
-  imageURLState,
   isPopoverOpenState,
   linkURLState,
   noteContentState,
@@ -49,14 +48,9 @@ type TypeOption = {
 };
 
 const types: TypeOption[] = [
-  {
-    value: "note",
-    label: "Note",
-  },
-  {
-    value: "link",
-    label: "Link",
-  },
+  { value: "link", label: "Link" },
+  { value: "note", label: "Note" },
+  { value: "image", label: "Image" },
 ];
 
 export function EditContentButton({ id }: { id: string }) {
@@ -66,7 +60,7 @@ export function EditContentButton({ id }: { id: string }) {
   const [title, setTitle] = useRecoilState(titleState);
   const [type, setType] = useRecoilState(typeState);
   const [linkURL, setLinkURL] = useRecoilState(linkURLState);
-  const [imageURL, setImageURL] = useRecoilState(imageURLState);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [noteContent, setNoteContent] = useRecoilState(noteContentState);
   const [isPopoverOpen, setPopoverOpen] = useRecoilState(isPopoverOpenState);
   const [open, setOpen] = useState(false);
@@ -77,7 +71,7 @@ export function EditContentButton({ id }: { id: string }) {
     setType("link");
     setLinkURL("");
     setNoteContent("");
-    setImageURL("");
+    setImageFile(null);
   };
 
   // Handler for form submission
@@ -85,43 +79,100 @@ export function EditContentButton({ id }: { id: string }) {
     event.preventDefault();
     const card = cards.find((card) => card._id === id);
     const createdAt = card?.createdAt;
-    const updatedCard = {
-      title,
-      type,
-      ...(type === "link" && { linkURL }),
-      ...(type === "image" && { imageURL }),
-      ...(type === "note" && { noteContent }),
-      createdAt,
-      lastUpdatedAt: new Date(),
-    };
+    const updatedAt = new Date();
+    if (type === "image") {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("type", type);
+      if (imageFile) formData.append("imageFile", imageFile);
+      if (createdAt) formData.append("createdAt", updatedAt.toISOString());
+      formData.append("updatedAt", updatedAt.toISOString());
 
-    try {
-      const token = await getAccessTokenSilently();
-      const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/content/${id}`,
-        updatedCard,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const updatedCardAdded = response.data.content;
+      try {
+        const token = await getAccessTokenSilently();
+        const response = await axios.put(
+          `${import.meta.env.VITE_BACKEND_URL}/api/content/image/${id}`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const updatedCardAdded = response.data.content;
+        setCards((prevCards) => [
+          updatedCardAdded,
+          ...prevCards.filter((card) => card._id !== id),
+        ]);
+        resetStates();
+        setOpen(false);
+      } catch {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to add content. Please try again.",
+          duration: 1000,
+        });
+        resetStates();
+        setOpen(false);
+      }
+    } else {
+      const updatedCard = {
+        title,
+        type,
+        ...(type === "link" && { linkURL }),
+        ...(type === "note" && { noteContent }),
+        createdAt,
+        lastUpdatedAt: new Date(),
+      };
 
-      setCards((prevCards) => [
-        updatedCardAdded,
-        ...prevCards.filter((card) => card._id !== id),
-      ]);
-      resetStates();
-      setOpen(false);
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to edit content. Please try again.",
-        duration: 1000,
-      });
-      setOpen(false);
+      try {
+        const token = await getAccessTokenSilently();
+        const response = await axios.put(
+          `${import.meta.env.VITE_BACKEND_URL}/api/content/${id}`,
+          updatedCard,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const updatedCardAdded = response.data.content;
+
+        setCards((prevCards) => [
+          updatedCardAdded,
+          ...prevCards.filter((card) => card._id !== id),
+        ]);
+        resetStates();
+        setOpen(false);
+      } catch {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to edit content. Please try again.",
+          duration: 1000,
+        });
+        resetStates();
+        setOpen(false);
+      }
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Max image size should not exceed 5MB",
+          duration: 1000,
+        });
+        e.target.value = "";
+        setImageFile(null);
+      } else {
+        setImageFile(file);
+      }
     }
   };
 
@@ -132,9 +183,6 @@ export function EditContentButton({ id }: { id: string }) {
       setType(card.type);
 
       switch (card.type) {
-        case "image":
-          if (card.imageURL) setImageURL(card.imageURL);
-          break;
         case "note":
           if (card.noteContent) setNoteContent(card.noteContent); // Corrected to setNoteContent
           break;
@@ -261,6 +309,17 @@ export function EditContentButton({ id }: { id: string }) {
                   value={noteContent}
                   onChange={(e) => setNoteContent(e.target.value)}
                   className="col-span-3 h-[150px]"
+                />
+              </div>
+            )}
+            {type === "image" && (
+              <div className="flex pl-11 gap-2 items-center">
+                <Label htmlFor="picture">Picture</Label>
+                <Input
+                  id="picture"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
                 />
               </div>
             )}

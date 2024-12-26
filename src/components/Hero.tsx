@@ -22,7 +22,7 @@ export function Hero() {
             Dump all your{" "}
             <span className="text-white">
               <FlipWords
-                words={["notes", "links", "thoughts"]}
+                words={["links", "images", "notes", "thoughts"]}
                 duration={1000}
               />
             </span>

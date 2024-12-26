@@ -29,7 +29,6 @@ import {
 import { useRecoilState, useSetRecoilState } from "recoil";
 import {
   cardsState,
-  imageURLState,
   isPopoverOpenState,
   linkURLState,
   noteContentState,
@@ -48,8 +47,9 @@ type TypeOption = {
 };
 
 const types: TypeOption[] = [
-  { value: "note", label: "Note" },
   { value: "link", label: "Link" },
+  { value: "note", label: "Note" },
+  { value: "image", label: "Image" },
 ];
 
 export function AddContentButton() {
@@ -58,7 +58,7 @@ export function AddContentButton() {
   const [title, setTitle] = useRecoilState(titleState);
   const [type, setType] = useRecoilState(typeState);
   const [linkURL, setLinkURL] = useRecoilState(linkURLState);
-  const [imageURL, setImageURL] = useRecoilState(imageURLState);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [noteContent, setNoteContent] = useRecoilState(noteContentState);
   const [isPopoverOpen, setPopoverOpen] = useRecoilState(isPopoverOpenState);
   const [open, setOpen] = useState(false);
@@ -69,48 +69,101 @@ export function AddContentButton() {
     setType("link");
     setLinkURL("");
     setNoteContent("");
-    setImageURL("");
+    setImageFile(null);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-
     const createdAt = new Date();
-    const newCard = {
-      title,
-      type,
-      ...(type === "link" && { linkURL }),
-      ...(type === "image" && { imageURL }),
-      ...(type === "note" && { noteContent }),
-      createdAt,
-      lastUpdatedAt: createdAt,
-    };
+    if (type === "image") {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("type", type);
+      if (imageFile) formData.append("imageFile", imageFile);
+      formData.append("createdAt", createdAt.toISOString());
+      formData.append("updatedAt", createdAt.toISOString());
 
-    try {
-      const token = await getAccessTokenSilently();
-      const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/content`,
-        newCard,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const newCardAdded = response.data.content;
-      setCards((prevCards) => [newCardAdded, ...prevCards]);
+      try {
+        const token = await getAccessTokenSilently();
+        const response = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/content/image`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        const newCardAdded = response.data.content;
+        setCards((prevCards) => [newCardAdded, ...prevCards]);
+        resetStates();
+        setOpen(false);
+      } catch {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to add content. Please try again.",
+          duration: 1000,
+        });
+        resetStates();
+        setOpen(false);
+      }
+    } else {
+      const newCard = {
+        title,
+        type,
+        ...(type === "link" && { linkURL }),
+        ...(type === "note" && { noteContent }),
+        createdAt,
+        lastUpdatedAt: createdAt,
+      };
 
-      // Reset state and close dialog
-      resetStates();
-      setOpen(false);
-    } catch {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to add content. Please try again.",
-        duration: 1000,
-      });
-      setOpen(false);
+      try {
+        const token = await getAccessTokenSilently();
+        const response = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}/api/content`,
+          newCard,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const newCardAdded = response.data.content;
+        setCards((prevCards) => [newCardAdded, ...prevCards]);
+
+        // Reset state and close dialog
+        resetStates();
+        setOpen(false);
+      } catch {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to add content. Please try again.",
+          duration: 1000,
+        });
+        resetStates();
+        setOpen(false);
+      }
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Max image size should not exceed 5MB",
+          duration: 1000,
+        });
+        e.target.value = "";
+        setImageFile(null);
+      } else {
+        setImageFile(file);
+      }
     }
   };
 
@@ -227,6 +280,17 @@ export function AddContentButton() {
                   value={noteContent}
                   onChange={(e) => setNoteContent(e.target.value)}
                   className="col-span-3 h-[150px]"
+                />
+              </div>
+            )}
+            {type === "image" && (
+              <div className="flex pl-11 gap-2 items-center">
+                <Label htmlFor="picture">Picture</Label>
+                <Input
+                  id="picture"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
                 />
               </div>
             )}

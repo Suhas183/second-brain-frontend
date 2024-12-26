@@ -90,7 +90,7 @@ export function Dashboard() {
               {cards.map((card) => (
                 <Card
                   key={card._id}
-                  className="w-full min-h-[250px] flex flex-col justify-between group relative shadow-md"
+                  className="w-full min-h-[250px] flex flex-col justify-between group relative shadow-md overflow-hidden"
                   style={{ breakInside: "avoid" }} // Ensure cards don't break between columns
                 >
                   <CardHeader>
@@ -155,6 +155,9 @@ export function Dashboard() {
                         )}
                       </div>
                     </CardContent>
+                  )}
+                  {card.imageURL && (
+                    <img src={card.imageURL} alt="Image" width={"100%"} />
                   )}
                 </Card>
               ))}

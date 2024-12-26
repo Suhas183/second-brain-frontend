@@ -27,11 +27,6 @@ export const linkURLState = atom<string>({
   default: "",
 });
 
-export const imageURLState = atom<string>({
-  key: "imageURL",
-  default: "",
-});
-
 export const noteContentState = atom<string>({
   key: "noteContent",
   default: "",
